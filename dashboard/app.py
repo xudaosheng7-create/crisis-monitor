@@ -50,10 +50,15 @@ except Exception as e:
 try:
     from engine.scoring import (
         crisis_probability_series, get_risk_level, composite_stress,
-        detect_regime, get_regime_series, get_action_plan,
+        detect_regime, get_regime_series,
     )
 except Exception as e:
     import_errors.append(f"engine.scoring: {type(e).__name__}: {e}")
+
+try:
+    from engine.actions import get_action_plan
+except Exception as e:
+    import_errors.append(f"engine.actions: {type(e).__name__}: {e}")
 
 try:
     from dashboard.components import (

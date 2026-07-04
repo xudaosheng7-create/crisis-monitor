@@ -578,9 +578,10 @@ def render_action_card(action_plan: dict) -> str:
     alloc_rows = ""
     for asset, guidance in p["asset_allocation"].items():
         g_color = {
-            "标配": "#2ECC40", "标配偏轻": "#FFDC00", "低配": "#FF851B",
-            "超配": "#FFDC00", "最低": "#FF4136", "回避": "#FF4136",
-            "清仓": "#8B0000", "重仓": "#FFDC00", "绝对重仓": "#FFDC00",
+            "Overweight": "#2ECC40", "Normal": "#2ECC40",
+            "Light": "#FFDC00", "Underweight": "#FF851B",
+            "Minimal": "#FF4136", "Avoid": "#FF4136",
+            "Exit": "#8B0000", "Heavy": "#FFDC00", "Max": "#FFDC00",
         }.get(guidance, "#888")
         alloc_rows += f"""
         <tr style="border-bottom:1px solid #333;">
@@ -601,8 +602,8 @@ def render_action_card(action_plan: dict) -> str:
 
     trend_html = ""
     if p["trend_warning"]:
-        tcolor = "#FF4136" if "恶化" in p["trend_warning"] else (
-            "#2ECC40" if "改善" in p["trend_warning"] else "#FFDC00")
+        tcolor = "#FF4136" if "deteriorating" in p["trend_warning"].lower() else (
+            "#2ECC40" if "improving" in p["trend_warning"].lower() else "#FFDC00")
         trend_html = f"""
         <div style="
             background:{tcolor}15; border-left:3px solid {tcolor};
