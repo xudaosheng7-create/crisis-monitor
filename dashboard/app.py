@@ -73,15 +73,30 @@ st.markdown("""
 # ── Data loading ─────────────────────────────────────────────────────
 
 def _load_config():
-    """Load FRED API key from settings.yaml."""
+    """Load FRED API key. Checks: Streamlit secrets → settings.yaml → env var."""
+    # 1. Streamlit Cloud secrets
+    try:
+        key = st.secrets.get("FRED_API_KEY") or st.secrets.get("fred_api_key")
+        if key:
+            return key
+    except Exception:
+        pass
+
+    # 2. Local settings.yaml
     import yaml
     config_path = Path(__file__).resolve().parent.parent / "config" / "settings.yaml"
     try:
         with open(config_path, encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
-        return cfg.get("api", {}).get("fred_api_key", "")
+        key = cfg.get("api", {}).get("fred_api_key", "")
+        if key:
+            return key
     except Exception:
-        return ""
+        pass
+
+    # 3. Environment variable
+    import os
+    return os.environ.get("FRED_API_KEY", "")
 
 
 def _compute_derived(df: pd.DataFrame) -> pd.DataFrame:

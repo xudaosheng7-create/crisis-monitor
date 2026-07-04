@@ -3,7 +3,7 @@
 
 # --- API Keys (for Phase 2 live data) ---
 api:
-  fred_api_key: "ace1c3a8d1adb6b492f8bbef55d600b3"
+  fred_api_key: ""        # Set via Streamlit Cloud secrets or env var FRED_API_KEY
   telegram_bot_token: ""  # For alert bot (Phase 2)
   telegram_chat_id: ""
 
