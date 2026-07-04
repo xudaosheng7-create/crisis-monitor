@@ -1,0 +1,81 @@
+# Global Financial Crisis Early Warning System v3 — Configuration
+# ===================================================================
+
+# --- API Keys (for Phase 2 live data) ---
+api:
+  fred_api_key: "ace1c3a8d1adb6b492f8bbef55d600b3"
+  telegram_bot_token: ""  # For alert bot (Phase 2)
+  telegram_chat_id: ""
+
+# --- Model Weights ---
+weights:
+  liquidity: 0.40
+  credit: 0.35
+  contagion: 0.25
+
+# --- Individual Indicator Weights within each module ---
+indicators:
+  liquidity:
+    treasury_10y: 0.25      # DGS10 — rising yields signal tightening
+    fed_balance_sheet: 0.20  # WALCL — shrinking = QT = tightening
+    sofr: 0.20               # SOFR — rising = funding stress
+    dxy: 0.20                # DTWEXBGS — rising = dollar squeeze
+    repo_rate: 0.15          # DTB3 — proxy for repo stress
+
+  credit:
+    hy_spread: 0.35          # BAMLH0A0HYM2 — high yield OAS
+    ig_spread: 0.25          # BAMLC0A0CM — investment grade OAS
+    loan_standards: 0.25     # DRTSCILM — tight standards survey
+    default_rate: 0.15       # DRCCLACBS — corporate default rate
+
+  contagion:
+    vix: 0.40                # VIXCLS — fear gauge
+    leveraged_etf_flow: 0.30 # proxy via TLT flows
+    bank_index: 0.30         # KBW bank index via KRE
+
+# --- Scoring Thresholds ---
+thresholds:
+  zscore_lookback_years: 3
+
+  risk_levels:
+    - max: 20
+      label: "正常 Normal"
+      emoji: "🟢"
+      color: "#2ECC40"
+    - max: 40
+      label: "注意 Watch"
+      emoji: "🟡"
+      color: "#FFDC00"
+    - max: 60
+      label: "脆弱 Fragile"
+      emoji: "🟠"
+      color: "#FF851B"
+    - max: 100
+      label: "危险 Danger"
+      emoji: "🔴"
+      color: "#FF4136"
+
+# --- Alert Rules ---
+alerts:
+  # Credit stress rising + Liquidity stress rising simultaneously
+  dual_stress:
+    enabled: true
+    credit_threshold: 55       # Credit stress index above 55
+    liquidity_threshold: 55    # Liquidity stress index above 55
+
+  # Single-module extreme
+  extreme:
+    enabled: true
+    threshold: 75             # Any single module above 75
+
+  # Crisis probability threshold
+  crisis_probability:
+    enabled: true
+    threshold: 45             # P(Crisis) above 45%
+
+# --- Dashboard ---
+dashboard:
+  title: "🌍 全球金融风险监测 Global Financial Risk Monitor"
+  subtitle: "Crisis Early Warning System v3"
+  refresh_interval_minutes: 60
+  trend_days: 90
