@@ -16,7 +16,7 @@ The offset of -50 means: when all 3 modules are at 50 (neutral), probability is 
 The divisor 10 controls steepness — changing a module by 10 points shifts probability by ~25%.
 """
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -157,8 +157,8 @@ def detect_regime(
     liquidity: float,
     credit: float,
     contagion: float,
-    leading_signal: float | None = None,
-    probability: float | None = None,
+    leading_signal: Optional[float] = None,
+    probability: Optional[float] = None,
 ) -> dict:
     """
     Rule-based market regime classifier.
