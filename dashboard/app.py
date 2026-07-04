@@ -358,7 +358,53 @@ with tab_overview:
 
     # ── Row 3: Action Recommendation Card ──
     st.subheader("💡 风险姿态与行动建议 Risk Posture & Action Plan")
-    st.markdown(render_action_card(action_plan), unsafe_allow_html=True)
+
+    p = action_plan
+    posture = p["posture"]
+    pc = posture["color"]
+
+    # Use native Streamlit components instead of raw HTML
+    with st.container(border=True):
+        # Header row
+        col_h1, col_h2 = st.columns([2, 1])
+        with col_h1:
+            st.caption("RISK POSTURE")
+            st.markdown(f"### :{pc}[Level {p['posture_level']} — {posture['name']}]")
+            st.caption(posture["desc"])
+        with col_h2:
+            st.metric("P(Crisis 3-9mo)", f"{p['probability']:.1f}%")
+            st.caption(p["regime"])
+
+        # Trend warning
+        if p["trend_warning"]:
+            tw = p["trend_warning"]
+            if "deteriorating" in tw.lower():
+                st.warning(tw)
+            elif "improving" in tw.lower():
+                st.success(tw)
+            else:
+                st.info(tw)
+
+        # Two columns: Actions + Allocation
+        col_act, col_alloc = st.columns(2)
+        with col_act:
+            st.markdown("**Suggested Actions**")
+            for a in p["actions"]:
+                st.markdown(f"- {a}")
+        with col_alloc:
+            st.markdown("**Asset Allocation Guide**")
+            for asset, guidance in p["asset_allocation"].items():
+                g_color = {
+                    "Overweight": "green", "Normal": "green", "Light": "orange",
+                    "Underweight": "orange", "Minimal": "red", "Avoid": "red",
+                    "Exit": "red", "Heavy": "orange", "Max": "orange",
+                }.get(guidance, "grey")
+                st.markdown(f"- {asset}: :{g_color}[**{guidance}**]")
+
+        # Driver analysis
+        with st.expander("Driver Analysis"):
+            for d in p["driver_info"]:
+                st.caption(d)
 
     st.divider()
 
