@@ -361,48 +361,53 @@ with tab_overview:
 
     p = action_plan
     posture = p["posture"]
-    pc = posture["color"]
+    # Map hex to Streamlit named colors
+    pc_hex = posture["color"]
+    posture_color_name = {
+        "#2ECC40": "green", "#FFDC00": "orange", "#FF851B": "orange",
+        "#FF4136": "red", "#8B0000": "red",
+    }.get(pc_hex, "grey")
 
-    # Use native Streamlit components instead of raw HTML
     with st.container(border=True):
         # Header row
         col_h1, col_h2 = st.columns([2, 1])
         with col_h1:
             st.caption("RISK POSTURE")
-            st.markdown(f"### :{pc}[Level {p['posture_level']} — {posture['name']}]")
+            st.subheader(f"Level {p['posture_level']} — {posture['name']}")
             st.caption(posture["desc"])
         with col_h2:
-            st.metric("P(Crisis 3-9mo)", f"{p['probability']:.1f}%")
+            st.metric("P(Crisis 3-9mo)", f"{p['probability']:.1f}%",
+                      delta=f"{prob_delta:+.1f}%" if prob_delta != 0 else None,
+                      delta_color="inverse")
             st.caption(p["regime"])
 
         # Trend warning
         if p["trend_warning"]:
-            tw = p["trend_warning"]
-            if "deteriorating" in tw.lower():
-                st.warning(tw)
-            elif "improving" in tw.lower():
-                st.success(tw)
+            if "deteriorating" in p["trend_warning"].lower():
+                st.error(p["trend_warning"])
+            elif "improving" in p["trend_warning"].lower():
+                st.success(p["trend_warning"])
             else:
-                st.info(tw)
+                st.warning(p["trend_warning"])
+
+        st.divider()
 
         # Two columns: Actions + Allocation
         col_act, col_alloc = st.columns(2)
         with col_act:
             st.markdown("**Suggested Actions**")
             for a in p["actions"]:
-                st.markdown(f"- {a}")
+                st.write(f"• {a}")
         with col_alloc:
             st.markdown("**Asset Allocation Guide**")
             for asset, guidance in p["asset_allocation"].items():
-                g_color = {
-                    "Overweight": "green", "Normal": "green", "Light": "orange",
-                    "Underweight": "orange", "Minimal": "red", "Avoid": "red",
-                    "Exit": "red", "Heavy": "orange", "Max": "orange",
-                }.get(guidance, "grey")
-                st.markdown(f"- {asset}: :{g_color}[**{guidance}**]")
+                icon = {"Overweight": "🟢", "Normal": "🟢", "Light": "🟡",
+                        "Underweight": "🟠", "Minimal": "🔴", "Avoid": "🔴",
+                        "Exit": "⛔", "Heavy": "🟡", "Max": "🟡"}.get(guidance, "⚪")
+                st.write(f"{icon} **{asset}**: {guidance}")
 
         # Driver analysis
-        with st.expander("Driver Analysis"):
+        with st.expander("🔍 Driver Analysis — 谁在带节奏？"):
             for d in p["driver_info"]:
                 st.caption(d)
 
