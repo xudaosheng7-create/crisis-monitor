@@ -20,55 +20,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# ── Imports with error capture for debugging ──────────────────────────
-import_errors = []
-
-def _safe_import(module_path: str, names: str):
-    """Import with error capture for Streamlit Cloud debugging."""
-    try:
-        mod = __import__(module_path, fromlist=[names])
-        return getattr(mod, names)
-    except Exception as e:
-        import_errors.append(f"{module_path}.{names}: {type(e).__name__}: {e}")
-        return None
-
-try:
-    from data.sample_data import build_sample_data, FRED_SERIES
-except Exception as e:
-    import_errors.append(f"data.sample_data: {type(e).__name__}: {e}")
-
-try:
-    from data.indicators import compute_all_stress, evaluate_alerts
-except Exception as e:
-    import_errors.append(f"data.indicators: {type(e).__name__}: {e}")
-
-try:
-    from data.live_fetcher import LiveDataPipeline
-except Exception as e:
-    import_errors.append(f"data.live_fetcher: {type(e).__name__}: {e}")
-
-try:
-    from engine.scoring import (
-        crisis_probability_series, get_risk_level, composite_stress,
-        detect_regime, get_regime_series,
-    )
-except Exception as e:
-    import_errors.append(f"engine.scoring: {type(e).__name__}: {e}")
-
-try:
-    from engine.actions import get_action_plan
-except Exception as e:
-    import_errors.append(f"engine.actions: {type(e).__name__}: {e}")
-
-try:
-    from dashboard.components import (
-        render_gauge, render_probability_trend, render_module_trends,
-        render_radar_bars, render_alert_table, get_status_info,
-        render_signal_lights, render_regime_badge, render_regime_timeline,
-        render_action_card, MODULE_COLORS, MODULE_LABELS, COLORS,
-    )
-except Exception as e:
-    import_errors.append(f"dashboard.components: {type(e).__name__}: {e}")
+from data.sample_data import build_sample_data, FRED_SERIES
+from data.indicators import compute_all_stress, evaluate_alerts
+from data.live_fetcher import LiveDataPipeline
+from engine.scoring import (
+    crisis_probability_series, get_risk_level, composite_stress,
+    detect_regime, get_regime_series,
+)
+from engine.actions import get_action_plan
+from dashboard.components import (
+    render_gauge, render_probability_trend, render_module_trends,
+    render_radar_bars, render_alert_table, get_status_info,
+    render_signal_lights, render_regime_badge, render_regime_timeline,
+    render_action_card, MODULE_COLORS, MODULE_LABELS, COLORS,
+)
 
 # ── Page config ───────────────────────────────────────────────────────
 st.set_page_config(
@@ -130,14 +95,6 @@ st.markdown("""
     ::-webkit-scrollbar-thumb { background: #2a2a45; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
-
-# ── Show import errors if any ─────────────────────────────────────────
-if import_errors:
-    st.error("## Import Errors Detected")
-    for err in import_errors:
-        st.code(err)
-    st.stop()
-
 
 # ── Data loading ─────────────────────────────────────────────────────
 
