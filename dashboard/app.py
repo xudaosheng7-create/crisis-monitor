@@ -29,6 +29,7 @@ from engine.scoring import (
     composite_stress,
     detect_regime,
     get_regime_series,
+    get_action_plan,
 )
 from dashboard.components import (
     render_gauge,
@@ -40,6 +41,7 @@ from dashboard.components import (
     render_signal_lights,
     render_regime_badge,
     render_regime_timeline,
+    render_action_card,
     MODULE_COLORS,
     MODULE_LABELS,
     COLORS,
@@ -210,6 +212,17 @@ regime_changed = prev_regime["name"] if prev_regime["name"] != current_regime["n
 status = get_status_info(prob)
 risk = get_risk_level(prob)
 
+# ── Action Plan ───────────────────────────────────────────────────────
+prob_delta = prob - prev_prob
+action_plan = get_action_plan(
+    probability=prob,
+    regime_name=current_regime["name"],
+    liquidity=l_stress,
+    credit=c_stress,
+    contagion=g_stress,
+    trend_delta=prob_delta,
+)
+
 # ── Alerts ────────────────────────────────────────────────────────────
 alerts = evaluate_alerts(
     df[["liquidity_stress", "credit_stress", "contagion_stress"]],
@@ -319,7 +332,13 @@ with tab_overview:
 
     st.divider()
 
-    # ── Row 3: 90-day trend ──
+    # ── Row 3: Action Recommendation Card ──
+    st.subheader("💡 风险姿态与行动建议 Risk Posture & Action Plan")
+    st.markdown(render_action_card(action_plan), unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── Row 4: 90-day trend ──
     st.subheader("📉 90天危机概率趋势 90-Day Probability Trend")
 
     fig_trend = render_probability_trend(df, days=90)

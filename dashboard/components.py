@@ -544,3 +544,123 @@ def render_regime_timeline(df: pd.DataFrame) -> go.Figure:
     )
 
     return fig
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Action Recommendation Card
+# ═══════════════════════════════════════════════════════════════════════
+
+def render_action_card(action_plan: dict) -> str:
+    """
+    Returns HTML for a prominent action recommendation card.
+    Shows: posture, asset allocation table, specific actions, driver info.
+    """
+    p = action_plan
+
+    # Posture badge
+    posture = p["posture"]
+    posture_color = posture["color"]
+
+    # Asset allocation rows
+    alloc_rows = ""
+    for asset, guidance in p["asset_allocation"].items():
+        g_color = {
+            "标配": "#2ECC40", "标配偏轻": "#FFDC00", "低配": "#FF851B",
+            "超配": "#FFDC00", "最低": "#FF4136", "回避": "#FF4136",
+            "清仓": "#8B0000", "重仓": "#FFDC00", "绝对重仓": "#FFDC00",
+        }.get(guidance, "#888")
+        alloc_rows += f"""
+        <tr style="border-bottom:1px solid #333;">
+            <td style="padding:5px 12px;color:#ccc;">{asset}</td>
+            <td style="padding:5px 12px;color:{g_color};font-weight:600;">{guidance}</td>
+        </tr>
+        """
+
+    # Actions
+    action_items = ""
+    for a in p["actions"]:
+        action_items += f'<li style="margin:4px 0;color:#ddd;">{a}</li>'
+
+    # Driver info
+    driver_items = ""
+    for d in p["driver_info"]:
+        driver_items += f'<li style="margin:2px 0;color:#aaa;font-size:13px;">{d}</li>'
+
+    trend_html = ""
+    if p["trend_warning"]:
+        tcolor = "#FF4136" if "恶化" in p["trend_warning"] else (
+            "#2ECC40" if "改善" in p["trend_warning"] else "#FFDC00")
+        trend_html = f"""
+        <div style="
+            background:{tcolor}15; border-left:3px solid {tcolor};
+            padding:8px 12px; margin:10px 0; border-radius:4px;
+            font-size:13px; color:{tcolor};
+        ">{p["trend_warning"]}</div>
+        """
+
+    return f"""
+    <div style="
+        background: linear-gradient(135deg, #1a1a30 0%, #1e1e35 100%);
+        border: 1px solid {posture_color}44;
+        border-left: 5px solid {posture_color};
+        border-radius: 12px;
+        overflow: hidden;
+    ">
+        <!-- Header -->
+        <div style="
+            background: {posture_color}15;
+            padding: 14px 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        ">
+            <div>
+                <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">
+                    Risk Posture · 风险姿态
+                </div>
+                <div style="font-size:22px;font-weight:700;color:{posture_color};margin-top:2px;">
+                    Level {p["posture_level"]} — {posture["name"]}
+                </div>
+                <div style="font-size:13px;color:#aaa;margin-top:4px;">
+                    {posture["desc"]}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px;color:#888;">P(Crisis 3-9mo)</div>
+                <div style="font-size:28px;font-weight:700;color:{posture_color};">{p["probability"]:.1f}%</div>
+                <div style="font-size:12px;color:#888;">{p["regime"]}</div>
+            </div>
+        </div>
+
+        {trend_html}
+
+        <!-- Body: 2 columns -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <!-- Left: Actions -->
+            <div style="padding:16px 20px;border-right:1px solid #2a2a40;">
+                <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:8px;">
+                    Suggested Actions
+                </div>
+                <ul style="padding-left:18px;margin:0;line-height:1.5;">
+                    {action_items}
+                </ul>
+            </div>
+            <!-- Right: Allocation + Driver -->
+            <div style="padding:16px 20px;">
+                <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:8px;">
+                    Asset Allocation Guide
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    {alloc_rows}
+                </table>
+                <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2a2a40;">
+                    <div style="font-size:12px;color:#888;margin-bottom:4px;">Driver Analysis</div>
+                    <ul style="padding-left:14px;margin:0;line-height:1.5;">
+                        {driver_items}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
