@@ -69,8 +69,8 @@ def render_gauge(probability: float) -> go.Figure:
     fig.add_trace(go.Pie(
         values=[prob_pct, remaining],
         labels=["", ""],
-        hole=0.75,
-        marker=dict(colors=[color, "#2d2d3f"]),
+        hole=0.78,
+        marker=dict(colors=[color, "#1a1a30"]),
         textinfo="none",
         hoverinfo="none",
         sort=False,
@@ -78,16 +78,20 @@ def render_gauge(probability: float) -> go.Figure:
         rotation=90,
     ))
 
-    # Annotation in center
+    # Center number
     fig.add_annotation(
-        text=f"<b style='font-size:48px;color:{color}'>{probability:.1f}%</b>",
-        x=0.5, y=0.5, showarrow=False,
-        font=dict(size=14, color=COLORS["grey"]),
+        text=f"<b style='font-size:46px;color:{color}'>{probability:.1f}%</b>",
+        x=0.5, y=0.52, showarrow=False,
+    )
+    # Subtitle
+    fig.add_annotation(
+        text="<span style='font-size:11px;color:#777;'>P(Crisis 3-9mo)</span>",
+        x=0.5, y=0.32, showarrow=False,
     )
 
     fig.update_layout(
-        margin=dict(l=10, r=10, t=10, b=10),
-        height=260,
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=240,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
     )
@@ -163,38 +167,41 @@ def render_probability_trend(
             line_width=0,
         )
 
-    # ── Probability line ──
+    # ── Probability line with gradient fill ──
     fig.add_trace(go.Scatter(
         x=subset.index,
         y=subset["crisis_probability"],
-        mode="lines+markers",
+        mode="lines",
         name="P(Crisis)",
-        line=dict(color=COLORS["red"], width=2.5),
-        marker=dict(size=5, color=COLORS["red"]),
-        hovertemplate="%{x|%Y-%m-%d}<br>概率: %{y:.1f}%<extra></extra>",
+        line=dict(color=COLORS["red"], width=2.5, shape="spline", smoothing=0.3),
+        fill="tozeroy",
+        fillcolor="rgba(255,65,54,0.06)",
+        hovertemplate="%{x|%Y-%m-%d}<br>Probability: %{y:.1f}%<extra></extra>",
     ))
 
     # ── Threshold lines ──
-    for thresh, label in [(20, "注意"), (40, "脆弱"), (60, "危险")]:
+    for thresh, label, lcolor in [(20, "Watch", COLORS["yellow"]),
+                                    (40, "Fragile", COLORS["orange"]),
+                                    (60, "Danger", COLORS["red"])]:
         fig.add_hline(
             y=thresh,
             line_dash="dot",
-            line_color=COLORS["grey"],
-            opacity=0.5,
-            annotation_text=label,
+            line_color=lcolor,
+            opacity=0.3, line_width=1,
+            annotation_text=f" {label} ",
             annotation_position="right",
+            annotation_font=dict(size=10, color=lcolor),
         )
 
     fig.update_layout(
-        xaxis_title=None,
-        yaxis_title="危机概率 Crisis Probability (%)",
-        yaxis=dict(range=[0, 100]),
-        height=380,
-        margin=dict(l=10, r=10, t=10, b=10),
+        xaxis=dict(showgrid=False, zeroline=False, color="#444"),
+        yaxis=dict(range=[0, 100], showgrid=True, gridcolor="#1a1a30",
+                    zeroline=False, color="#444", title=None),
+        height=360,
+        margin=dict(l=0, r=10, t=5, b=5),
         hovermode="x unified",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(orientation="h", y=-0.15),
     )
 
     return fig
@@ -227,32 +234,34 @@ def render_module_trends(df: pd.DataFrame, days: int = 90) -> go.Figure:
         ("contagion_stress", MODULE_COLORS["contagion"], "🌊"),
     ]
 
+    fill_colors = {
+        "liquidity_stress": "rgba(0,116,217,0.06)",
+        "credit_stress": "rgba(177,13,201,0.06)",
+        "contagion_stress": "rgba(255,133,27,0.06)",
+    }
     for i, (col, color, icon) in enumerate(modules, 1):
         fig.add_trace(
             go.Scatter(
                 x=subset.index,
                 y=subset[col],
-                mode="lines+markers",
+                mode="lines",
                 name=col,
-                line=dict(color=color, width=2),
-                marker=dict(size=4, color=color),
+                line=dict(color=color, width=2, shape="spline", smoothing=0.3),
+                fill="tozeroy",
+                fillcolor=fill_colors.get(col, "rgba(128,128,128,0.04)"),
                 showlegend=False,
-                hovertemplate="%{x|%Y-%m-%d}<br>压力: %{y:.1f}<extra></extra>",
+                hovertemplate="%{x|%Y-%m-%d}<br>%{y:.1f}<extra></extra>",
             ),
             row=i, col=1,
         )
-        # 50-line reference
-        fig.add_hline(y=50, line_dash="dot", line_color=COLORS["grey"],
-                       opacity=0.4, row=i, col=1)
+        fig.add_hline(y=50, line_dash="dot", line_color="#333355",
+                       opacity=0.5, row=i, col=1)
 
-    fig.update_xaxes(row=3, col=1)
-    fig.update_yaxes(range=[0, 100], row=1, col=1)
-    fig.update_yaxes(range=[0, 100], row=2, col=1)
-    fig.update_yaxes(range=[0, 100], row=3, col=1)
-
+    fig.update_xaxes(showgrid=False, color="#444", row=3, col=1)
+    fig.update_yaxes(range=[0, 100], showgrid=True, gridcolor="#1a1a30", color="#444")
     fig.update_layout(
-        height=520,
-        margin=dict(l=10, r=10, t=30, b=10),
+        height=500,
+        margin=dict(l=0, r=10, t=30, b=5),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         hovermode="x unified",
@@ -285,30 +294,32 @@ def render_radar_bars(liquidity: float, credit: float, contagion: float) -> go.F
         orientation="h",
         marker=dict(
             color=colors,
-            line=dict(color="rgba(255,255,255,0.1)", width=1),
+            line=dict(color="rgba(255,255,255,0.05)", width=1),
+            cornerradius=4,
         ),
-        text=[f"{v:.1f}" for v in values],
+        text=[f" {v:.0f}" for v in values],
         textposition="outside",
-        textfont=dict(size=14, color="white"),
+        textfont=dict(size=16, color="white", family="sans-serif"),
         hovertemplate="%{y}: %{x:.1f}/100<extra></extra>",
+        width=0.5,
     ))
 
-    # Risk zone reference lines
-    for thresh, color in [(20, COLORS["green"]), (40, COLORS["yellow"]),
-                           (60, COLORS["orange"]), (80, COLORS["red"])]:
+    # Subtle zone reference lines
+    for thresh in [25, 50, 75]:
         fig.add_vline(
-            x=thresh, line_dash="dot", line_color=color,
-            opacity=0.3, line_width=1,
+            x=thresh, line_dash="solid", line_color="#333355",
+            opacity=0.4, line_width=1,
         )
 
     fig.update_layout(
-        xaxis=dict(range=[0, 100], title="压力指数 Stress Index"),
-        yaxis=dict(autorange="reversed"),
-        height=200,
-        margin=dict(l=10, r=40, t=10, b=10),
+        xaxis=dict(range=[0, 105], showgrid=False, showticklabels=False, title=None),
+        yaxis=dict(autorange="reversed", showgrid=False, tickfont=dict(size=14, color="#aaa")),
+        height=160,
+        margin=dict(l=0, r=40, t=5, b=5),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
+        barmode="group",
     )
 
     return fig
@@ -379,27 +390,29 @@ def get_status_info(probability: float) -> Dict:
 def _light(value: float, label: str) -> str:
     """Single signal light HTML."""
     if value >= 65:
-        color, emoji, status = COLORS["red"], "🔴", "危险"
+        color, emoji, status = COLORS["red"], "●", "HIGH"
     elif value >= 45:
-        color, emoji, status = COLORS["orange"], "🟠", "预警"
+        color, emoji, status = COLORS["orange"], "●", "ELEVATED"
     elif value >= 30:
-        color, emoji, status = COLORS["yellow"], "🟡", "关注"
+        color, emoji, status = COLORS["yellow"], "●", "WATCH"
     else:
-        color, emoji, status = COLORS["green"], "🟢", "正常"
+        color, emoji, status = COLORS["green"], "●", "LOW"
 
+    bar_pct = min(value, 100)
     return f"""
     <div style="
-        background: linear-gradient(135deg, #1e1e30 0%, #252540 100%);
-        border: 1px solid {color}44;
-        border-left: 4px solid {color};
-        border-radius: 8px;
-        padding: 10px 14px;
-        text-align: center;
+        background: linear-gradient(145deg, #12122a 0%, #18183a 100%);
+        border: 1px solid #252545; border-radius: 12px;
+        padding: 14px 16px; text-align: center;
     ">
-        <div style="font-size:11px;color:#888;margin-bottom:4px;">{label}</div>
-        <div style="font-size:22px;">{emoji}</div>
-        <div style="font-size:13px;font-weight:600;color:{color};">{status}</div>
-        <div style="font-size:10px;color:#666;">{value:.0f}/100</div>
+        <div style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">{label}</div>
+        <div style="font-size:28px;font-weight:700;color:{color};margin:4px 0;line-height:1;">{value:.0f}<span style="font-size:14px;color:#555;">/100</span></div>
+        <div style="
+            background:#1a1a30; border-radius:4px; height:3px; margin:8px 0; overflow:hidden;
+        "><div style="
+            background:{color}; height:100%; width:{bar_pct}%; border-radius:4px; transition:width 0.5s;
+        "></div></div>
+        <div style="font-size:10px;font-weight:600;color:{color};text-transform:uppercase;letter-spacing:0.05em;">{status}</div>
     </div>
     """
 

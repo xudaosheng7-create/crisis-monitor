@@ -55,19 +55,56 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
-# ── Custom CSS (dark theme) ───────────────────────────────────────────
+# ── Custom CSS ───────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main .block-container { padding-top: 1.5rem; }
-    .stMetric { background: #1e1e30; border-radius: 10px; padding: 12px; }
-    .stMetric label { color: #888 !important; font-size: 13px !important; }
-    [data-testid="stMetricValue"] { font-size: 28px !important; font-weight: 700 !important; }
-    h1 { font-size: 1.6rem !important; }
-    h2 { font-size: 1.2rem !important; }
-    h3 { font-size: 1.0rem !important; }
-    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 6px 6px 0 0; padding: 10px 20px; }
-    hr { margin: 0.5rem 0; }
+    /* ── Base ── */
+    .main .block-container { padding-top: 1rem; max-width: 1400px; }
+    h1 { font-size: 1.5rem !important; font-weight: 700 !important; letter-spacing: -0.02em; }
+    h2 { font-size: 1.1rem !important; font-weight: 600 !important; }
+    h3 { font-size: 0.95rem !important; font-weight: 600 !important; }
+    hr { margin: 0.3rem 0; border-color: #2a2a3a; }
+
+    /* ── Tabs ── */
+    .stTabs [data-baseweb="tab-list"] { gap: 4px; background: #0f0f1a; border-radius: 10px; padding: 4px; }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px; padding: 8px 20px; font-size: 14px; font-weight: 500;
+        background: transparent; color: #666; border: none; transition: all 0.2s;
+    }
+    .stTabs [data-baseweb="tab"]:hover { color: #ccc; background: #1a1a2e; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: #fff; background: #1e1e35; }
+
+    /* ── Metrics ── */
+    .stMetric {
+        background: linear-gradient(145deg, #12122a 0%, #1a1a35 100%);
+        border: 1px solid #252545; border-radius: 12px; padding: 14px 16px;
+        transition: border-color 0.3s;
+    }
+    .stMetric:hover { border-color: #3a3a60; }
+    .stMetric label { color: #777 !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 0.05em; }
+    [data-testid="stMetricValue"] { font-size: 26px !important; font-weight: 700 !important; }
+    [data-testid="stMetricDelta"] { font-size: 13px !important; }
+
+    /* ── Sidebar ── */
+    [data-testid="stSidebar"] { background: #0a0a16; border-right: 1px solid #1e1e35; }
+    [data-testid="stSidebar"] .stButton button {
+        width: 100%; border-radius: 8px; font-weight: 500; transition: all 0.2s;
+    }
+
+    /* ── Expandable sections ── */
+    .streamlit-expanderHeader { font-weight: 600 !important; border-radius: 10px !important; }
+    .streamlit-expanderContent { background: #0f0f20; border-radius: 0 0 10px 10px; padding: 16px !important; }
+
+    /* ── DataFrames ── */
+    [data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
+
+    /* ── Footer ── */
+    footer { visibility: hidden; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a14; }
+    ::-webkit-scrollbar-thumb { background: #2a2a45; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
