@@ -96,6 +96,40 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── Daily pulse ──────────────────────────────────────────────────────
+
+@st.cache_data(ttl=300)  # 5 min cache for daily data
+def fetch_daily_pulse(api_key: str = "") -> dict | None:
+    """Fetch last 7 days of daily data for fast-moving indicators."""
+    if not api_key:
+        return None
+    try:
+        from data.fetcher import FREDFetcher
+        from datetime import datetime, timedelta
+        fred = FREDFetcher(api_key)
+        start = (datetime.today() - timedelta(days=10)).strftime("%Y-%m-%d")
+
+        daily = {}
+        for sid, name in [("VIXCLS", "VIX"), ("DGS10", "10Y Treasury"),
+                          ("SOFR", "SOFR"), ("SP500", "S&P 500"),
+                          ("BAMLH0A0HYM2EY", "HY Yield")]:
+            df = fred.fetch(sid, start=start)
+            if not df.empty and len(df) >= 2:
+                vals = df["value"].astype(float)
+                latest = vals.iloc[-1]
+                prev = vals.iloc[-2]
+                prev5 = vals.iloc[-6] if len(vals) >= 6 else vals.iloc[0]
+                daily[name] = {
+                    "latest": latest,
+                    "daily_delta": latest - prev,
+                    "week_delta": latest - prev5,
+                    "trend": vals.values[-7:].tolist() if len(vals) >= 7 else vals.values.tolist(),
+                }
+        return daily if daily else None
+    except Exception:
+        return None
+
+
 # ── Data loading ─────────────────────────────────────────────────────
 
 def _load_config():
@@ -236,6 +270,9 @@ regime_changed = prev_regime["name"] if prev_regime["name"] != current_regime["n
 status = get_status_info(prob)
 risk = get_risk_level(prob)
 
+# ── Daily Pulse ───────────────────────────────────────────────────────
+daily_pulse = fetch_daily_pulse(_load_config())
+
 # ── Action Plan ───────────────────────────────────────────────────────
 prob_delta = prob - prev_prob
 action_plan = get_action_plan(
@@ -356,7 +393,34 @@ with tab_overview:
 
     st.divider()
 
-    # ── Row 3: Action Recommendation Card ──
+    # ── Row 3: Daily Pulse ──
+    if daily_pulse:
+        st.subheader("📡 每日脉搏 Daily Pulse")
+        st.caption("高频指标日级变化 — 捕捉月度模型捕捉不到的短期波动")
+
+        cols = st.columns(len(daily_pulse))
+        for i, (name, d) in enumerate(daily_pulse.items()):
+            with cols[i]:
+                day_delta = d["daily_delta"]
+                week_delta = d["week_delta"]
+                day_color = "inverse" if name in ("VIX", "HY Yield") else "normal"
+                st.metric(
+                    name,
+                    f"{d['latest']:.2f}" if d['latest'] < 100 else f"{d['latest']:.0f}",
+                    delta=f"{day_delta:+.2f}" if abs(day_delta) < 10 else f"{day_delta:+.0f}",
+                    delta_color=day_color,
+                )
+                # Week trend arrow
+                if abs(week_delta) > 0.01:
+                    w_emoji = "↗" if week_delta > 0 else "↘"
+                    w_color = "🔴" if (name == "VIX" and week_delta > 0) or (name == "S&P 500" and week_delta < 0) else "🟢"
+                    st.caption(f"{w_emoji} 周变化: {week_delta:+.2f}")
+    else:
+        st.caption("每日脉搏需要 FRED API Key 才能显示")
+
+    st.divider()
+
+    # ── Row 4: Action Recommendation Card ──
     st.subheader("💡 风险姿态与行动建议 Risk Posture & Action Plan")
 
     p = action_plan
